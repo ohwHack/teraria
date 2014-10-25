@@ -4,6 +4,7 @@ import RPi.GPIO as GPIO
 import time
 import os
 import datetime
+import subprocess
 
 GPIO.setmode(GPIO.BCM)
 
@@ -19,8 +20,12 @@ class Sensor:
 	configs = []
 
 def readTemp(sensor):
-	f = open(sensor.strip(), "r")
-	temp = float(f.read().strip())
+	#f = open(sensor.strip(), "r")
+	#temp = float(f.read().strip())
+	p = subprocess.Popen(['owread', sensor + "/temperature12"], stdout=subprocess.PIPE)
+	out = p.communicate()
+	temp = float(out[0])
+	print(temp)
 	return temp
 
 def readSensors():
@@ -63,22 +68,13 @@ def controlSensor(sensor):
 		else:
 			break
 
-	temp = float(readTemp(WIRE_MOUNT_DIRECTORY + sensor.id + "/temperature12"))
+	temp = float(readTemp( sensor.id ))
 
 	if temp < float(useConfig[0]):
 		GPIO.output(sensor.pinNo, False)
 	elif temp > float(useConfig[1]):
 		GPIO.output(sensor.pinNo, True)
 
-
-
-#temp = float(readTemp("/mnt/1wire/28.365327060000/temperature12"))
-#print(temp)
-#if temp > 30:
-#	GPIO.output(18, False)
-#else:
-#	GPIO.output(18, True)
-#
 sensors = readSensors()
 initPins(sensors)
 control(sensors)
